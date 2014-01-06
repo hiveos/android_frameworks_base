@@ -77,10 +77,6 @@ public class TvStatusBar extends BaseStatusBar {
     }
 
     @Override
-    public void setImeWindowStatus(IBinder token, int vis, int backDisposition) {
-    }
-
-    @Override
     public void setHardKeyboardStatus(boolean available, boolean enabled) {
     }
 

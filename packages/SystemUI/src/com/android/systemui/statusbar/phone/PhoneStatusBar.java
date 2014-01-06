@@ -2230,18 +2230,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
 	}
 
 	@Override
-	public void setImeWindowStatus(IBinder token, int vis, int backDisposition) {
-		boolean altBack = (backDisposition == InputMethodService.BACK_DISPOSITION_WILL_DISMISS)
-				|| ((vis & InputMethodService.IME_VISIBLE) != 0);
-
-		mCommandQueue
-				.setNavigationIconHints(altBack ? (mNavigationIconHints | NAVIGATION_HINT_BACK_ALT)
-						: (mNavigationIconHints & ~NAVIGATION_HINT_BACK_ALT));
-		if (mQS != null)
-			mQS.setImeWindowStatus(vis > 0);
-	}
-
-	@Override
 	public void setHardKeyboardStatus(boolean available, boolean enabled) {
 	}
 

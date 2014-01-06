@@ -40,7 +40,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LevelListDrawable;
 import android.hardware.display.DisplayManager;
-import android.hardware.display.WifiDisplayStatus;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -101,7 +100,6 @@ class QuickSettings {
 
 	private DisplayManager mDisplayManager;
 	private DevicePolicyManager mDevicePolicyManager;
-	private WifiDisplayStatus mWifiDisplayStatus;
 	private PhoneStatusBar mStatusBarService;
 	private BluetoothState mBluetoothState;
 	private BluetoothAdapter mBluetoothAdapter;
@@ -134,18 +132,10 @@ class QuickSettings {
 		mContext = context;
 		mContainerView = container;
 		mModel = new QuickSettingsModel(context);
-		mWifiDisplayStatus = new WifiDisplayStatus();
-		mBluetoothState = new QuickSettingsModel.BluetoothState();
-		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-		mWifiManager = (WifiManager) context
-				.getSystemService(Context.WIFI_SERVICE);
 
 		mHandler = new Handler();
 
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(DisplayManager.ACTION_WIFI_DISPLAY_STATUS_CHANGED);
-		filter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
-		filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
 		filter.addAction(Intent.ACTION_USER_SWITCHED);
 		filter.addAction(Intent.ACTION_CONFIGURATION_CHANGED);
 		filter.addAction(KeyChain.ACTION_STORAGE_CHANGED);
@@ -171,10 +161,6 @@ class QuickSettings {
 		return mStatusBarService;
 	}
 
-	public void setImeWindowStatus(boolean visible) {
-		mModel.onImeWindowStatusChanged(visible);
-	}
-
 	void setup(NetworkController networkController,
 			BluetoothController bluetoothController,
 			BatteryController batteryController,
@@ -185,15 +171,9 @@ class QuickSettings {
 		mLocationController = locationController;
 
 		setupQuickSettings();
-		updateWifiDisplayStatus();
 		updateResources();
-		applyLocationEnabledStatus();
 
-		networkController.addNetworkSignalChangedCallback(mModel);
-		bluetoothController.addStateChangedCallback(mModel);
 		batteryController.addStateChangedCallback(mModel);
-		locationController.addSettingsChangedCallback(mModel);
-		rotationLockController.addRotationLockControllerCallback(mModel);
 	}
 
 	private void queryForSslCaCerts() {
@@ -446,142 +426,6 @@ class QuickSettings {
 	}
 	
 	private void addSystemTiles(ViewGroup parent, LayoutInflater inflater) {
-		// Wi-fi
-		final QuickSettingsTileView wifiTile = (QuickSettingsTileView) inflater
-				.inflate(R.layout.quick_settings_tile, parent, false);
-		wifiTile.setContent(R.layout.quick_settings_tile_wifi, inflater);
-		wifiTile.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				startSettingsActivity(android.provider.Settings.ACTION_WIFI_SETTINGS);
-			}
-		});
-		if (LONG_PRESS_TOGGLES) {
-			wifiTile.setOnLongClickListener(new View.OnLongClickListener() {
-				@Override
-				public boolean onLongClick(View v) {
-					final boolean enable = (mWifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED);
-					new AsyncTask<Void, Void, Void>() {
-						@Override
-						protected Void doInBackground(Void... args) {
-							// Disable tethering if enabling Wifi
-							final int wifiApState = mWifiManager
-									.getWifiApState();
-							if (enable
-									&& ((wifiApState == WifiManager.WIFI_AP_STATE_ENABLING) || (wifiApState == WifiManager.WIFI_AP_STATE_ENABLED))) {
-								mWifiManager.setWifiApEnabled(null, false);
-							}
-
-							mWifiManager.setWifiEnabled(enable);
-							return null;
-						}
-					}.execute();
-					wifiTile.setPressed(false);
-					return true;
-				}
-			});
-		}
-		mModel.addWifiTile(wifiTile, new NetworkActivityCallback() {
-			@Override
-			public void refreshView(QuickSettingsTileView view, State state) {
-				WifiState wifiState = (WifiState) state;
-				ImageView iv = (ImageView) view.findViewById(R.id.image);
-				iv.setImageResource(wifiState.iconId);
-				setActivity(view, wifiState);
-				TextView tv = (TextView) view.findViewById(R.id.text);
-				tv.setText(wifiState.label);
-				wifiTile.setContentDescription(mContext.getString(
-						R.string.accessibility_quick_settings_wifi,
-						wifiState.signalContentDescription,
-						(wifiState.connected) ? wifiState.label : ""));
-			}
-		});
-		parent.addView(wifiTile);
-
-		if (mModel.deviceHasMobileData()) {
-			// RSSI
-			QuickSettingsTileView rssiTile = (QuickSettingsTileView) inflater
-					.inflate(R.layout.quick_settings_tile, parent, false);
-			rssiTile.setContent(R.layout.quick_settings_tile_rssi, inflater);
-			rssiTile.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					Intent intent = new Intent();
-					intent.setComponent(new ComponentName(
-							"com.android.settings",
-							"com.android.settings.Settings$DataUsageSummaryActivity"));
-					startSettingsActivity(intent);
-				}
-			});
-			mModel.addRSSITile(rssiTile, new NetworkActivityCallback() {
-				@Override
-				public void refreshView(QuickSettingsTileView view, State state) {
-					RSSIState rssiState = (RSSIState) state;
-					ImageView iv = (ImageView) view
-							.findViewById(R.id.rssi_image);
-					ImageView iov = (ImageView) view
-							.findViewById(R.id.rssi_overlay_image);
-					TextView tv = (TextView) view
-							.findViewById(R.id.rssi_textview);
-					// Force refresh
-					iv.setImageDrawable(null);
-					iv.setImageResource(rssiState.signalIconId);
-
-					if (rssiState.dataTypeIconId > 0) {
-						iov.setImageResource(rssiState.dataTypeIconId);
-					} else {
-						iov.setImageDrawable(null);
-					}
-					setActivity(view, rssiState);
-
-					tv.setText(state.label);
-					view.setContentDescription(mContext
-							.getResources()
-							.getString(
-									R.string.accessibility_quick_settings_mobile,
-									rssiState.signalContentDescription,
-									rssiState.dataContentDescription,
-									state.label));
-				}
-			});
-			parent.addView(rssiTile);
-		}
-
-		// Rotation Lock
-		if (mContext.getResources().getBoolean(
-				R.bool.quick_settings_show_rotation_lock)
-				|| DEBUG_GONE_TILES) {
-			final QuickSettingsBasicTile rotationLockTile = new QuickSettingsBasicTile(
-					mContext);
-			rotationLockTile.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View view) {
-					final boolean locked = mRotationLockController
-							.isRotationLocked();
-					mRotationLockController.setRotationLocked(!locked);
-				}
-			});
-			mModel.addRotationLockTile(rotationLockTile,
-					mRotationLockController,
-					new QuickSettingsModel.RefreshCallback() {
-						@Override
-						public void refreshView(QuickSettingsTileView view,
-								State state) {
-							QuickSettingsModel.RotationLockState rotationLockState = (QuickSettingsModel.RotationLockState) state;
-							view.setVisibility(rotationLockState.visible ? View.VISIBLE
-									: View.GONE);
-							if (state.iconId != 0) {
-								// needed to flush any cached IDs
-								rotationLockTile.setImageDrawable(null);
-								rotationLockTile.setImageResource(state.iconId);
-							}
-							if (state.label != null) {
-								rotationLockTile.setText(state.label);
-							}
-						}
-					});
-			parent.addView(rotationLockTile);
-		}
 
 		// Battery
 		final QuickSettingsTileView batteryTile = (QuickSettingsTileView) inflater
@@ -621,228 +465,11 @@ class QuickSettings {
 					}
 				});
 		parent.addView(batteryTile);
-
-		// Airplane Mode
-		final QuickSettingsBasicTile airplaneTile = new QuickSettingsBasicTile(
-				mContext);
-		mModel.addAirplaneModeTile(airplaneTile,
-				new QuickSettingsModel.RefreshCallback() {
-					@Override
-					public void refreshView(QuickSettingsTileView unused,
-							State state) {
-						airplaneTile.setImageResource(state.iconId);
-
-						String airplaneState = mContext
-								.getString((state.enabled) ? R.string.accessibility_desc_on
-										: R.string.accessibility_desc_off);
-						airplaneTile.setContentDescription(mContext.getString(
-								R.string.accessibility_quick_settings_airplane,
-								airplaneState));
-						airplaneTile.setText(state.label);
-					}
-				});
-		parent.addView(airplaneTile);
-
-		// Bluetooth
-		if (mModel.deviceSupportsBluetooth() || DEBUG_GONE_TILES) {
-			final QuickSettingsBasicTile bluetoothTile = new QuickSettingsBasicTile(
-					mContext);
-			bluetoothTile.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					startSettingsActivity(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
-				}
-			});
-			if (LONG_PRESS_TOGGLES) {
-				bluetoothTile
-						.setOnLongClickListener(new View.OnLongClickListener() {
-							@Override
-							public boolean onLongClick(View v) {
-								if (mBluetoothAdapter.isEnabled()) {
-									mBluetoothAdapter.disable();
-								} else {
-									mBluetoothAdapter.enable();
-								}
-								bluetoothTile.setPressed(false);
-								return true;
-							}
-						});
-			}
-			mModel.addBluetoothTile(bluetoothTile,
-					new QuickSettingsModel.RefreshCallback() {
-						@Override
-						public void refreshView(QuickSettingsTileView unused,
-								State state) {
-							BluetoothState bluetoothState = (BluetoothState) state;
-							bluetoothTile.setImageResource(state.iconId);
-
-							/*
-							 * Resources r = mContext.getResources(); //TODO:
-							 * Show connected bluetooth device label
-							 * Set<BluetoothDevice> btDevices =
-							 * mBluetoothController.getBondedBluetoothDevices();
-							 * if (btDevices.size() == 1) { // Show the name of
-							 * the bluetooth device you are connected to label =
-							 * btDevices.iterator().next().getName(); } else if
-							 * (btDevices.size() > 1) { // Show a generic label
-							 * about the number of bluetooth devices label =
-							 * r.getString(R.string.
-							 * quick_settings_bluetooth_multiple_devices_label,
-							 * btDevices.size()); }
-							 */
-							bluetoothTile.setContentDescription(mContext
-									.getString(
-											R.string.accessibility_quick_settings_bluetooth,
-											bluetoothState.stateContentDescription));
-							bluetoothTile.setText(state.label);
-						}
-					});
-			parent.addView(bluetoothTile);
-		}
-
-		// Location
-		final QuickSettingsBasicTile locationTile = new QuickSettingsBasicTile(
-				mContext);
-		locationTile.setImageResource(R.drawable.ic_qs_location_on);
-		locationTile.setTextResource(R.string.quick_settings_location_label);
-		locationTile.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				startSettingsActivity(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-			}
-		});
-		if (LONG_PRESS_TOGGLES) {
-			locationTile.setOnLongClickListener(new View.OnLongClickListener() {
-				@Override
-				public boolean onLongClick(View v) {
-					boolean newLocationEnabledState = !mLocationController
-							.isLocationEnabled();
-					if (mLocationController
-							.setLocationEnabled(newLocationEnabledState)
-							&& newLocationEnabledState) {
-						// If we've successfully switched from location off to
-						// on, close the
-						// notifications tray to show the network location
-						// provider consent dialog.
-						Intent closeDialog = new Intent(
-								Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-						mContext.sendBroadcast(closeDialog);
-					}
-					return true; // Consume click
-				}
-			});
-		}
-		mModel.addLocationTile(locationTile,
-				new QuickSettingsModel.BasicRefreshCallback(locationTile));
-		parent.addView(locationTile);
 	}
 
 	private void addTemporaryTiles(final ViewGroup parent,
 			final LayoutInflater inflater) {
-		// Alarm tile
-		final QuickSettingsBasicTile alarmTile = new QuickSettingsBasicTile(
-				mContext);
-		alarmTile.setImageResource(R.drawable.ic_qs_alarm_on);
-		alarmTile.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				startSettingsActivity(AlarmClock.ACTION_SHOW_ALARMS);
-			}
-		});
-		mModel.addAlarmTile(alarmTile,
-				new QuickSettingsModel.RefreshCallback() {
-					@Override
-					public void refreshView(QuickSettingsTileView unused,
-							State alarmState) {
-						alarmTile.setText(alarmState.label);
-						alarmTile
-								.setVisibility(alarmState.enabled ? View.VISIBLE
-										: View.GONE);
-						alarmTile.setContentDescription(mContext.getString(
-								R.string.accessibility_quick_settings_alarm,
-								alarmState.label));
-					}
-				});
-		parent.addView(alarmTile);
-
-		// Wifi Display
-		QuickSettingsBasicTile wifiDisplayTile = new QuickSettingsBasicTile(
-				mContext);
-		wifiDisplayTile.setImageResource(R.drawable.ic_qs_remote_display);
-		wifiDisplayTile.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				startSettingsActivity(android.provider.Settings.ACTION_WIFI_DISPLAY_SETTINGS);
-			}
-		});
-		mModel.addWifiDisplayTile(wifiDisplayTile,
-				new QuickSettingsModel.BasicRefreshCallback(wifiDisplayTile)
-						.setShowWhenEnabled(true));
-		parent.addView(wifiDisplayTile);
-
-		if (SHOW_IME_TILE || DEBUG_GONE_TILES) {
-			// IME
-			final QuickSettingsBasicTile imeTile = new QuickSettingsBasicTile(
-					mContext);
-			imeTile.setImageResource(R.drawable.ic_qs_ime);
-			imeTile.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					try {
-						collapsePanels();
-						Intent intent = new Intent(
-								Settings.ACTION_SHOW_INPUT_METHOD_PICKER);
-						PendingIntent pendingIntent = PendingIntent
-								.getBroadcast(mContext, 0, intent, 0);
-						pendingIntent.send();
-					} catch (Exception e) {
-					}
-				}
-			});
-			mModel.addImeTile(imeTile,
-					new QuickSettingsModel.BasicRefreshCallback(imeTile)
-							.setShowWhenEnabled(true));
-			parent.addView(imeTile);
-		}
-
-		// Bug reports
-		final QuickSettingsBasicTile bugreportTile = new QuickSettingsBasicTile(
-				mContext);
-		bugreportTile
-				.setImageResource(com.android.internal.R.drawable.stat_sys_adb);
-		bugreportTile
-				.setTextResource(com.android.internal.R.string.bugreport_title);
-		bugreportTile.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				collapsePanels();
-				showBugreportDialog();
-			}
-		});
-		mModel.addBugreportTile(bugreportTile,
-				new QuickSettingsModel.RefreshCallback() {
-					@Override
-					public void refreshView(QuickSettingsTileView view,
-							State state) {
-						view.setVisibility(state.enabled ? View.VISIBLE
-								: View.GONE);
-					}
-				});
-		parent.addView(bugreportTile);
-		/*
-		 * QuickSettingsTileView mediaTile = (QuickSettingsTileView)
-		 * inflater.inflate(R.layout.quick_settings_tile, parent, false);
-		 * mediaTile.setContent(R.layout.quick_settings_tile_media, inflater);
-		 * parent.addView(mediaTile); QuickSettingsTileView imeTile =
-		 * (QuickSettingsTileView)
-		 * inflater.inflate(R.layout.quick_settings_tile, parent, false);
-		 * imeTile.setContent(R.layout.quick_settings_tile_ime, inflater);
-		 * imeTile.setOnClickListener(new View.OnClickListener() {
-		 * 
-		 * @Override public void onClick(View v) { parent.removeViewAt(0); } });
-		 * parent.addView(imeTile);
-		 */
-
+		
 		// SSL CA Cert Warning.
 		final QuickSettingsBasicTile sslCaCertWarningTile = new QuickSettingsBasicTile(
 				mContext, null, R.layout.quick_settings_tile_monitoring);
@@ -922,24 +549,6 @@ class QuickSettings {
 		dialog.show();
 	}
 
-	private void updateWifiDisplayStatus() {
-		mWifiDisplayStatus = mDisplayManager.getWifiDisplayStatus();
-		applyWifiDisplayStatus();
-	}
-
-	private void applyWifiDisplayStatus() {
-		mModel.onWifiDisplayStateChanged(mWifiDisplayStatus);
-	}
-
-	private void applyBluetoothStatus() {
-		mModel.onBluetoothStateChange(mBluetoothState);
-	}
-
-	private void applyLocationEnabledStatus() {
-		mModel.onLocationSettingsChanged(mLocationController
-				.isLocationEnabled());
-	}
-
 	void reloadUserInfo() {
 		if (mUserInfoTask != null) {
 			mUserInfoTask.cancel(false);
@@ -955,25 +564,7 @@ class QuickSettings {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			final String action = intent.getAction();
-			if (DisplayManager.ACTION_WIFI_DISPLAY_STATUS_CHANGED
-					.equals(action)) {
-				WifiDisplayStatus status = (WifiDisplayStatus) intent
-						.getParcelableExtra(DisplayManager.EXTRA_WIFI_DISPLAY_STATUS);
-				mWifiDisplayStatus = status;
-				applyWifiDisplayStatus();
-			} else if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)) {
-				int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
-						BluetoothAdapter.ERROR);
-				mBluetoothState.enabled = (state == BluetoothAdapter.STATE_ON);
-				applyBluetoothStatus();
-			} else if (BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED
-					.equals(action)) {
-				int status = intent.getIntExtra(
-						BluetoothAdapter.EXTRA_CONNECTION_STATE,
-						BluetoothAdapter.STATE_DISCONNECTED);
-				mBluetoothState.connected = (status == BluetoothAdapter.STATE_CONNECTED);
-				applyBluetoothStatus();
-			} else if (Intent.ACTION_USER_SWITCHED.equals(action)) {
+			if (Intent.ACTION_USER_SWITCHED.equals(action)) {
 				reloadUserInfo();
 			} else if (Intent.ACTION_CONFIGURATION_CHANGED.equals(action)) {
 				if (mUseDefaultAvatar) {
