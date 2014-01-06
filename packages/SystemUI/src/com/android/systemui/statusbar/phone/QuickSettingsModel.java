@@ -319,7 +319,7 @@ class QuickSettingsModel implements BluetoothStateChangeCallback,
         mSettingsCallback = cb;
         refreshSettingsTile();
     }
-    void refreshSettingsTile() {
+    public void refreshSettingsTile() {
         Resources r = mContext.getResources();
         mSettingsState.label = r.getString(R.string.quick_settings_settings_label);
         mSettingsCallback.refreshView(mSettingsTile, mSettingsState);

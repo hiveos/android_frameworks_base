@@ -153,7 +153,9 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
                                                     // faster than mSelfCollapseVelocityPx)
 
     PhoneStatusBarPolicy mIconPolicy;
-
+    
+//    private QuickSettingsModel mModel;
+    
     // These are no longer handled by the policy, because we need custom strategies for them
     BluetoothController mBluetoothController;
     BatteryController mBatteryController;
@@ -169,6 +171,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
     private float mHeadsUpVerticalOffset;
     private int[] mPilePosition = new int[2];
 
+    
     StatusBarWindowView mStatusBarWindow;
     PhoneStatusBarView mStatusBarView;
     private int mStatusBarWindowState = WINDOW_STATE_SHOWING;
@@ -1580,7 +1583,11 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
             mSettingsPanel.expand();
         }
 
+    	mQS.updateSettingsTile();
+
         if (false) postStartTracing();
+
+
     }
 
     public void switchToSettings() {
