@@ -427,7 +427,11 @@ class QuickSettings {
 		settingsTile.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				startSettingsActivity(android.provider.Settings.ACTION_SETTINGS);
+				Intent mHIVESettingsIntent = new Intent(Intent.ACTION_ALL_APPS);
+				mHIVESettingsIntent.setClassName("hive.framework",
+						"hive.framework.settings.SettingsActivity");
+				mHIVESettingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				mContext.startActivity(mHIVESettingsIntent);
 			}
 		});
 		mModel.addSettingsTile(settingsTile,
