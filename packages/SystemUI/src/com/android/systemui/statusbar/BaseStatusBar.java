@@ -408,7 +408,6 @@ public abstract class BaseStatusBar extends SystemUI implements
                         return true;
                     }
                 });
-                mNotificationBlamePopup.show();
 
                 return true;
             }
