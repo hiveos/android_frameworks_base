@@ -121,7 +121,7 @@ public class RecentsActivity extends Activity {
     public void onStart() {
         // Hide wallpaper if it's not a static image
         if (forceOpaqueBackground(this)) {
-            updateWallpaperVisibility(false);
+            updateWallpaperVisibility(true); //mark1
         } else {
             updateWallpaperVisibility(true);
         }
