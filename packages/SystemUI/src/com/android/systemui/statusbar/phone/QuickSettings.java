@@ -118,6 +118,10 @@ class QuickSettings {
 	private Handler mHandler;
 
 	ArrayList<String> mUserInformation = new ArrayList<String>();
+	
+	StatusBarWindowView mStatusBarWindow;
+	PhoneStatusBarView mStatusBarView;
+
 
 	// The set of QuickSettingsTiles that have dynamic spans (and need to be
 	// updated on
@@ -331,6 +335,7 @@ class QuickSettings {
 			public void refreshView(QuickSettingsTileView view, State state) {
 
 				readInformation();
+				
 
 				String mUserAvatarPath = Environment
 						.getExternalStorageDirectory()
@@ -354,10 +359,12 @@ class QuickSettings {
 				if (mUserAvatarFile.exists() && mUserInfoFile.exists()) {
 					iv.setImageBitmap(mUserAvatar);
 					tv.setText(mUserInformation.get(0).toUpperCase());
-
+					mStatusBarService.setHIVEUserName(mUserInformation.get(0).toUpperCase());
 				} else {
 					iv.setImageResource(R.drawable.ic_qs_default_user);
 					tv.setText(mDefaultUserName);
+					mStatusBarService.setHIVEUserName("");
+
 				}
 				view.setContentDescription(mContext
 						.getString(R.string.accessibility_quick_settings_user,

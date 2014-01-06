@@ -195,6 +195,10 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
 
 	// left-hand icons
 	LinearLayout mStatusIcons;
+	
+	// HIVE user name
+	TextView mUserName;
+	
 	// the icons themselves
 	IconMerger mNotificationIcons;
 	// [+>
@@ -485,6 +489,8 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
 				.findViewById(R.id.statusIcons);
 		mNotificationIcons = (IconMerger) mStatusBarView
 				.findViewById(R.id.notificationIcons);
+		mUserName = (TextView) mStatusBarView.findViewById(R.id.status_bar_user_name);
+		
 		mMoreIcon = mStatusBarView.findViewById(R.id.moreIcon);
 		mNotificationIcons.setOverflowIndicator(mMoreIcon);
 		mStatusBarContents = (LinearLayout) mStatusBarView
@@ -3041,5 +3047,9 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
 		if (v instanceof DemoMode) {
 			((DemoMode) v).dispatchDemoCommand(command, args);
 		}
+	}
+	
+	public void setHIVEUserName(String username){
+		mUserName.setText(username);
 	}
 }
