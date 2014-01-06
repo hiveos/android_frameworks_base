@@ -432,6 +432,7 @@ class QuickSettings {
 						"hive.framework.settings.SettingsActivity");
 				mHIVESettingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				mContext.startActivity(mHIVESettingsIntent);
+				collapsePanels();
 			}
 		});
 		mModel.addSettingsTile(settingsTile,
