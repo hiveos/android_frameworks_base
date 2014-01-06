@@ -1721,8 +1721,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
 			mSettingsPanel.expand();
 		}
 
-		mQS.updateSettingsTile();
-
 		if (false)
 			postStartTracing();
 
@@ -1789,6 +1787,8 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
 				updateCarrierLabelVisibility(false);
 			}
 		}, FLIP_DURATION - 150);
+
+		mQS.updateSettingsTile();
 	}
 
 	public void flipPanels() {

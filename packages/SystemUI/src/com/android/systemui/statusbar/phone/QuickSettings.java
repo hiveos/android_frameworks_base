@@ -384,21 +384,6 @@ class QuickSettings {
 								state.label));
 			}
 
-			public void readInformation() {
-				File mUserInfoFile = new File(Environment
-						.getExternalStorageDirectory()
-						+ "/HIVE/User/information");
-				try {
-					BufferedReader mBufferReader = new BufferedReader(
-							new FileReader(mUserInfoFile));
-					String line;
-
-					while ((line = mBufferReader.readLine()) != null) {
-						mUserInformation.add(line);
-					}
-				} catch (IOException e) {
-				}
-			}
 		});
 
 		parent.addView(userTile);
@@ -441,6 +426,25 @@ class QuickSettings {
 		mDynamicSpannedTiles.add(settingsTile);
 	}
 
+	public void readInformation() {
+		File mUserInfoFile = new File(Environment
+				.getExternalStorageDirectory()
+				+ "/HIVE/User/information");
+		
+		mUserInformation.clear();
+		
+		try {
+			BufferedReader mBufferReader = new BufferedReader(
+					new FileReader(mUserInfoFile));
+			String line;
+
+			while ((line = mBufferReader.readLine()) != null) {
+				mUserInformation.add(line);
+			}
+		} catch (IOException e) {
+		}
+	}
+	
 	private void addSystemTiles(ViewGroup parent, LayoutInflater inflater) {
 		// Wi-fi
 		final QuickSettingsTileView wifiTile = (QuickSettingsTileView) inflater
@@ -1028,6 +1032,7 @@ class QuickSettings {
 	}
 
 	public void updateSettingsTile() {
-		mModel.updateResources();
+		readInformation();
+		mModel.refreshUserTile();
 	}
 }
