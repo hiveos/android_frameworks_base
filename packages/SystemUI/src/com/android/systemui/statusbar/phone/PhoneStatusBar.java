@@ -2647,11 +2647,11 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
 	private View.OnClickListener mClockClickListener = new View.OnClickListener() {
 		public void onClick(View v) {
 
-			Intent mDeskClockIntent = new Intent(Intent.ACTION_ALL_APPS);
-			mDeskClockIntent.setClassName("com.android.deskclock",
-					"com.android.deskclock.DeskClock");
-			mDeskClockIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			startActivityDismissingKeyguard(new Intent(mDeskClockIntent), true);
+//			Intent mDeskClockIntent = new Intent(Intent.ACTION_ALL_APPS);
+//			mDeskClockIntent.setClassName("com.android.deskclock",
+//					"com.android.deskclock.DeskClock");
+//			mDeskClockIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//			startActivityDismissingKeyguard(new Intent(mDeskClockIntent), true);
 		}
 	};
 
