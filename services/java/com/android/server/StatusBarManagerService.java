@@ -302,10 +302,7 @@ public class StatusBarManagerService extends IStatusBarService.Stub
             mHandler.post(new Runnable() {
                 public void run() {
                     if (mBar != null) {
-                        try {
-                            mBar.setImeWindowStatus(token, vis, backDisposition);
-                        } catch (RemoteException ex) {
-                        }
+                        
                     }
                 }
             });

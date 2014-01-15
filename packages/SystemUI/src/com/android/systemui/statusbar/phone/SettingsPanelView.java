@@ -76,7 +76,6 @@ public class SettingsPanelView extends PanelView {
 
     public void setImeWindowStatus(boolean visible) {
         if (mQS != null) {
-            mQS.setImeWindowStatus(visible);
         }
     }
 

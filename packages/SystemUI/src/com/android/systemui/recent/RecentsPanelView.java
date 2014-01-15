@@ -765,15 +765,6 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
             public boolean onMenuItemClick(MenuItem item) {
                 if (item.getItemId() == R.id.recent_remove_item) {
                     ((ViewGroup) mRecentsContainer).removeViewInLayout(selectedView);
-                } else if (item.getItemId() == R.id.recent_inspect_item) {
-                    ViewHolder viewHolder = (ViewHolder) selectedView.getTag();
-                    if (viewHolder != null) {
-                        final TaskDescription ad = viewHolder.taskDescription;
-                        startApplicationDetailsActivity(ad.packageName);
-                        show(false);
-                    } else {
-                        throw new IllegalStateException("Oops, no tag on view " + selectedView);
-                    }
                 } else {
                     return false;
                 }

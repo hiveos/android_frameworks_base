@@ -256,7 +256,6 @@ public abstract class BaseStatusBar extends SystemUI implements
         setSystemUiVisibility(switches[1], 0xffffffff);
         topAppWindowChanged(switches[2] != 0);
         // StatusBarManagerService has a back up of IME token and it's restored here.
-        setImeWindowStatus(binders.get(0), switches[3], switches[4]);
         setHardKeyboardStatus(switches[5] != 0, switches[6] != 0);
 
         // Set up the initial icon state
@@ -407,7 +406,6 @@ public abstract class BaseStatusBar extends SystemUI implements
                         return true;
                     }
                 });
-                mNotificationBlamePopup.show();
 
                 return true;
             }

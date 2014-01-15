@@ -77,17 +77,13 @@ public class TvStatusBar extends BaseStatusBar {
     }
 
     @Override
-    public void setImeWindowStatus(IBinder token, int vis, int backDisposition) {
-    }
-
-    @Override
     public void setHardKeyboardStatus(boolean available, boolean enabled) {
     }
 
     @Override
     public void toggleRecentApps() {
     }
-
+    
     @Override // CommandQueue
     public void setWindowState(int window, int state) {
     }

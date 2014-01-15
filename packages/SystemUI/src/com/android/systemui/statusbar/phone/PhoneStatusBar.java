@@ -185,6 +185,10 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
 
     // left-hand icons
     LinearLayout mStatusIcons;
+
+	// HIVE user name
+	TextView mUserName;
+
     // the icons themselves
     IconMerger mNotificationIcons;
     // [+>
@@ -457,7 +461,8 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
         mNotificationIcons.setOverflowIndicator(mMoreIcon);
         mStatusBarContents = (LinearLayout)mStatusBarView.findViewById(R.id.status_bar_contents);
         mTickerView = mStatusBarView.findViewById(R.id.ticker);
-
+        mUserName = (TextView) mStatusBarView.findViewById(R.id.status_bar_user_name);
+        
         mPile = (NotificationRowLayout)mStatusBarWindow.findViewById(R.id.latestItems);
         mPile.setLayoutTransitionsEnabled(false);
         mPile.setLongPressListener(getNotificationLongClicker());
@@ -633,10 +638,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
             }
         }
 
-        PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
-        mBroadcastReceiver.onReceive(mContext,
-                new Intent(pm.isScreenOn() ? Intent.ACTION_SCREEN_ON : Intent.ACTION_SCREEN_OFF));
-
         // receive broadcasts
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
@@ -650,6 +651,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
 
         return mStatusBarView;
     }
+
 
     @Override
     protected void onShowSearchPanel() {
@@ -807,7 +809,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
     }
 
     private void repositionNavigationBar() {
-        if (mNavigationBarView == null || !mNavigationBarView.isAttachedToWindow()) return;
+        if (mNavigationBarView == null) return;
 
         prepareNavigationBarView();
 
@@ -1646,6 +1648,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
                 updateCarrierLabelVisibility(false);
             }
         }, FLIP_DURATION - 150);
+mQS.updateSettingsTile();
     }
 
     public void flipPanels() {
@@ -1949,13 +1952,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
         transitions.transitionTo(mode, anim);
     }
 
-    private void finishBarAnimations() {
-        mStatusBarView.getBarTransitions().finishAnimations();
-        if (mNavigationBarView != null) {
-            mNavigationBarView.getBarTransitions().finishAnimations();
-        }
-    }
-
     private final Runnable mCheckBarModes = new Runnable() {
         @Override
         public void run() {
@@ -2045,17 +2041,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
     }
 
     @Override
-    public void setImeWindowStatus(IBinder token, int vis, int backDisposition) {
-        boolean altBack = (backDisposition == InputMethodService.BACK_DISPOSITION_WILL_DISMISS)
-            || ((vis & InputMethodService.IME_VISIBLE) != 0);
-
-        setNavigationIconHints(
-                altBack ? (mNavigationIconHints | NAVIGATION_HINT_BACK_ALT)
-                        : (mNavigationIconHints & ~NAVIGATION_HINT_BACK_ALT));
-        if (mQS != null) mQS.setImeWindowStatus(vis > 0);
-    }
-
-    @Override
     public void setHardKeyboardStatus(boolean available, boolean enabled) {}
 
     @Override
@@ -2105,12 +2090,9 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
         }
 
         public void tickerHalting() {
-            if (mStatusBarContents.getVisibility() != View.VISIBLE) {
-                mStatusBarContents.setVisibility(View.VISIBLE);
-                mStatusBarContents
-                        .startAnimation(loadAnim(com.android.internal.R.anim.fade_in, null));
-            }
+            mStatusBarContents.setVisibility(View.VISIBLE);
             mTickerView.setVisibility(View.GONE);
+            mStatusBarContents.startAnimation(loadAnim(com.android.internal.R.anim.fade_in, null));
             // we do not animate the ticker away at this point, just get rid of it (b/6992707)
         }
     }
@@ -2432,8 +2414,11 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
 
     private View.OnClickListener mClockClickListener = new View.OnClickListener() {
         public void onClick(View v) {
-            startActivityDismissingKeyguard(
-                    new Intent(Intent.ACTION_QUICK_CLOCK), true); // have fun, everyone
+//			Intent mDeskClockIntent = new Intent(Intent.ACTION_ALL_APPS);
+//			mDeskClockIntent.setClassName("com.android.deskclock",
+//					"com.android.deskclock.DeskClock");
+//			mDeskClockIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//			startActivityDismissingKeyguard(new Intent(mDeskClockIntent), true);
         }
     };
 
@@ -2463,7 +2448,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
                 makeExpandedInvisible();
                 notifyNavigationBarScreenOn(false);
                 notifyHeadsUpScreenOn(false);
-                finishBarAnimations();
             }
             else if (Intent.ACTION_SCREEN_ON.equals(action)) {
                 mScreenOn = true;
@@ -2791,4 +2775,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
             ((DemoMode)v).dispatchDemoCommand(command, args);
         }
     }
+	public void setHIVEUserName(String username){
+		mUserName.setText(username);
+	}
 }
