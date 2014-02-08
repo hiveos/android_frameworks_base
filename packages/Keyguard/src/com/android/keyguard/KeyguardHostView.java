@@ -1438,11 +1438,7 @@ public class KeyguardHostView extends KeyguardViewBase {
         mAppWidgetToShow = ss.appWidgetToShow;
         setInsets(ss.insets);
         if (DEBUG) Log.d(TAG, "onRestoreInstanceState, transport=" + mTransportState);
-<<<<<<< HEAD
         mSwitchPageRunnable.run();
-=======
-        post(mSwitchPageRunnable);
->>>>>>> ca96f33091bf1217ed17e7a106443463ce6995cd
     }
 
     @Override
@@ -1476,7 +1472,6 @@ public class KeyguardHostView extends KeyguardViewBase {
     }
 
     private void showAppropriateWidgetPage() {
-<<<<<<< HEAD
         final int state = mTransportState;
         final boolean transportAdded = ensureTransportPresentOrRemoved(state);
         final int pageToShow = getAppropriateWidgetPage(state);
@@ -1492,12 +1487,6 @@ public class KeyguardHostView extends KeyguardViewBase {
                 }
             });
         }
-=======
-        int state = mTransportState;
-        ensureTransportPresentOrRemoved(state);
-        int pageToShow = getAppropriateWidgetPage(state);
-        mAppWidgetContainer.setCurrentPage(pageToShow);
->>>>>>> ca96f33091bf1217ed17e7a106443463ce6995cd
     }
 
     /**
@@ -1744,3 +1733,4 @@ public class KeyguardHostView extends KeyguardViewBase {
     }
 
 }
+
