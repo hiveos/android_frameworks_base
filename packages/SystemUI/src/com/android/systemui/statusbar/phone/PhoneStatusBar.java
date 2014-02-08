@@ -1431,7 +1431,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
                     setHeadsUpVisibility(false);
                     break;
             }
-            mQS.updateSettingsTile();
+            mQS.updateHiveInfo();
         }
     }
 
@@ -2938,7 +2938,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode {
             ((DemoMode) v).dispatchDemoCommand(command, args);
         }
     }
-
+    
     public void setHIVEUserName(String username) {
         mUserName.setText(username);
     }

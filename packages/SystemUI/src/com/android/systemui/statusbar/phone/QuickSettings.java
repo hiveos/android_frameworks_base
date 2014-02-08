@@ -89,7 +89,7 @@ import java.util.ArrayList;
 /**
  *
  */
-class QuickSettings {
+public class QuickSettings {
     static final boolean DEBUG_GONE_TILES = false;
     private static final String TAG = "QuickSettings";
     public static final boolean SHOW_IME_TILE = false;
@@ -151,6 +151,10 @@ class QuickSettings {
         profileFilter.addAction(Intent.ACTION_USER_INFO_CHANGED);
         mContext.registerReceiverAsUser(mProfileReceiver, UserHandle.ALL, profileFilter,
                 null, null);
+        
+        IntentFilter hiveFilter = new IntentFilter();
+        profileFilter.addAction("hive.action.General");
+        mContext.registerReceiver(mHiveReceiver, hiveFilter);
     }
 
     void setBar(PanelBar bar) {
@@ -574,6 +578,17 @@ class QuickSettings {
 
         }
     };
+    
+    private final BroadcastReceiver mHiveReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if(intent.getStringExtra("do").equals("login") || intent.getStringExtra("do").equals("logout")) {
+                updateHiveInfo();
+          }
+
+        }
+    };
 
     private abstract static class NetworkActivityCallback
             implements QuickSettingsModel.RefreshCallback {
@@ -596,7 +611,7 @@ class QuickSettings {
         }
     }
 
-	public void updateSettingsTile() {
+	public void updateHiveInfo() {
 		readInformation();
 		mModel.refreshUserTile();
 	}
